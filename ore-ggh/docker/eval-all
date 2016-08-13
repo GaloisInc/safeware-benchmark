@@ -1,0 +1,55 @@
+#!/bin/bash
+
+source ore-utils
+
+usage() {
+	echo USAGE: keygen-all [--base DIR] [-j PROCESS_COUNT] [--help]
+	echo Run ORE comparisons. Uses the directory structure in DIR to decide
+	echo which backends and security parameters to use.
+	echo
+	echo '<base>' is a directory and defaults to /mount
+	echo '<process count>' is a number and defaults to 1
+	echo '<backend>' is one of clt or gghlite
+	echo '<secparam>' is a number
+	echo
+	echo The ciphertexts to compare and public parameters to use are from:
+	echo '<base>/<backend>/<secparam>/database'
+	echo '<base>/<backend>/<secparam>/public/mife.pub'
+}
+
+foreach_ciphertext_pair() {
+	for a in database/*
+	do
+		# cut off the database/ part
+		a="${a:9}"
+		for b in database/*
+		do
+			b="${b:9}"
+			"$@"
+		done
+	done
+}
+
+do_eval_pair() {
+	# Perhaps eval was not the greatest choice of program name. In any case, we
+	# disambiguate here between the shell builtin and the program on our PATH
+	# using env.
+	env eval $backend_opt "{\"a\":\"$a\",\"b\":\"$b\"}" >"logs/eval-$a-$b.out" 2>"logs/eval-$a-$b.err" &
+	add_pid $!
+}
+
+do_print_pair() {
+	echo ID "$a" vs. ID "$b":
+	cat "logs/eval-$a-$b.out"
+}
+
+do_eval() {
+	foreach_ciphertext_pair do_eval_pair
+	wait_pids
+	foreach_ciphertext_pair do_print_pair
+}
+
+parse_args "$@"
+foreach_backend_secparam do_eval
+wait_pids
+$succeeded

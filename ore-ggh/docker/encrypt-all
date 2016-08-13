@@ -1,0 +1,37 @@
+#!/bin/bash
+
+source ore-utils
+process_count=5
+
+usage() {
+	echo USAGE: encrypt-all [--base DIR] [-j PROCESS_COUNT] [--help]
+	echo Run MIFE encryption. Uses the directory structure in DIR to decide
+	echo which backends to use and looks for a specific file to specify
+	echo plaintexts.
+	echo
+	echo '<base>' is a directory and defaults to /mount
+	echo '<process count>' is a number and defaults to 5
+	echo '<backend>' is one of clt or gghlite
+	echo '<secparam>' is a number
+	echo
+	echo The plaintexts to encrypt will be taken from:
+	echo '<base>/<backend>/<secparam>/private/plain.txt'
+	echo This file should have one base-10 plaintext number per line.
+	echo Conversion from base 10 to MBP input will be guided by
+	echo '<base>/<backend>/<secparam>/public/template.json'
+}
+
+do_encrypt() {
+	# TODO: if private/plain.txt doesn't exist, this fails, but
+	# succeeded doesn't get set to false, and it probably should
+	nl private/plain.txt | while read i n
+	do
+		encrypt $backend_opt -i partition-$i-plaintext-$n -a $i `numfsm $n public/template.json 2>logs/numfsm-$n.err` >logs/encrypt-$i-$n.out 2>logs/encrypt-$i-$n.err &
+		add_pid $!
+	done
+}
+
+parse_args "$@"
+foreach_backend_secparam do_encrypt
+wait_pids
+$succeeded

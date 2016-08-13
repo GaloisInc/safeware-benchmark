@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -e
+source obf-utils
+
+usage() {
+	echo USAGE: obf-all [--base DIR] [--help]
+	echo Run point function obfuscation. Uses the directory structure in DIR to
+	echo decide which backends to use and which functions to obfuscate.
+	echo Specifically, function plaintexts will be take from
+	echo '<base>/<backend>/<secparam>/<digits>/<len>/*.json'
+	echo where:
+	echo
+	echo '<base>' is a directory and defaults to /mount
+	echo '<backend>' is one of clt or gghlite
+	echo '<secparam>' is a number
+	echo '<digits>' is a number between 1 and 9 inclusive
+	echo '<len>' is a number
+	echo
+	echo For each function '<foo>.json', the random number generator will be
+	echo seeded by the 32 bytes in '<foo>.json.seed' if it exists.
+	echo
+	echo The significance of '<digits>' and '<len>' are ignored by this script,
+	echo but see also eval-all --help.
+}
+
+do_obfuscate_all() {
+	for function in *.json
+	do
+		if [ -f "$function.seed" ]
+		then
+			obfuscator obf -v --mmap $backend_opt --secparam $secparam --base $base --load "$function" --seed "$function.seed" --nthreads 1
+		else
+			obfuscator obf -v --mmap $backend_opt --secparam $secparam --base $base --load "$function"
+		fi
+	done
+}
+
+parse_args "$@"
+foreach_dirs do_obfuscate_all

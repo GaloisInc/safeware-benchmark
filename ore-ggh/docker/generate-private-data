@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+source ore-utils
+
+usage() {
+	echo USAGE: generate-private-data [--base DIR] [--help]
+	echo Generate seed data and plaintexts for ORE encryption.
+	echo
+	echo '<base>' is a directory and defaults to /mount
+	echo '<backend>' is one of clt or gghlite
+	echo '<secparam>' is a number
+	echo
+	echo Seeds will be written to
+	echo '<base>/<backend>/<secparam>/private/seed.bin'
+	echo Ten base-10 numbers from 0 to 10^12-1 will be written to
+	echo '<base>/<backend>/<secparam>/private/plain.txt'
+	exit $1
+}
+
+do_generate_private_data() {
+	if mkdir private
+	then
+		dd if=/dev/urandom of=private/seed.bin bs=1024 count=1 2>/dev/null
+		touch private/plain.txt
+		for i in `seq 1 10`
+		do
+			tr a-zA-Z0-7 0-90-90-90-90-90-9 </dev/urandom | tr -dc 0-9 | head -c 12 >>private/plain.txt
+			echo >>private/plain.txt
+		done
+	else
+		echo skipping $backend/$secparam
+	fi
+}
+
+parse_args
+if [ "$process_count" -ne 1 ] 2>/dev/null
+then
+	echo WARNING: ignoring process count $process_count and doing everything serially
+fi
+foreach_backend_secparam do_generate_private_data

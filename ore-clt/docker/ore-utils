@@ -1,0 +1,99 @@
+#!/bin/bash
+
+base_dir=/mount
+process_count=1
+succeeded=true
+pids=()
+
+parse_args() {
+	while [ $# -gt 0 ]
+	do
+		case "$1" in
+			--base)
+				base_dir="$2"
+				shift
+				shift
+				;;
+			-j)
+				process_count="$2"
+				shift
+				shift
+				;;
+			-j*)
+				process_count=`echo $1 | cut -b3-`
+				shift
+				;;
+			--help)
+				usage
+				exit 0
+				;;
+			*)
+				echo Not sure what to do with argument $1
+				usage
+				exit 1
+				;;
+		esac
+	done
+
+	# strange-looking condition catches both nonpositives and nonnumerics
+	if ! [ "$process_count" -gt 0 ] 2>/dev/null
+	then
+		echo $process_count seems like a strange process count
+		usage
+		exit 1
+	fi
+}
+
+wait_pids() {
+	for pid in ${pids[@]}
+	do
+		if ! wait $pid
+		then
+			succeeded=false
+		fi
+	done
+	pids=()
+}
+
+add_pid() {
+	pids=(${pids[@]} $1)
+	if [ ${#pids[@]} -ge $process_count ]
+	then
+		wait_pids
+	fi
+}
+
+foreach_backend_secparam() {
+	for backend in `ls "$base_dir"`
+	do
+		case "$backend" in
+			clt) backend_opt=-C;;
+			gghlite) backend_opt="";;
+			*)
+				echo WARNING: skipping unknown backend "$backend"
+				continue
+				;;
+		esac
+		for secparam in `ls "$base_dir/$backend"`
+		do
+			# This complains about BOTH nonpositive security parameters AND
+			# non-numeric security parameters, unlike the test
+			#     [ "$secparam" -le 0 ]
+			# which complains only about nonpositive security parameters and lets
+			# non-numeric ones slip through.
+			if ! [ "$secparam" -gt 0 ] 2>/dev/null
+			then
+				echo WARNING: skipping unlikely security parameter "$secparam"
+				continue
+			fi
+			full_dir="$base_dir/$backend/$secparam"
+			if pushd "$full_dir" >/dev/null
+			then
+				"$@"
+				popd >/dev/null
+			else
+				succeeded=false
+			fi
+		done
+	done
+}

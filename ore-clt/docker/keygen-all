@@ -1,0 +1,32 @@
+#!/bin/bash
+
+source ore-utils
+process_count=2
+
+usage() {
+	echo USAGE: keygen-all [--base DIR] [-j PROCESS_COUNT] [--help]
+	echo Run MIFE key generation. Uses the directory structure in DIR to decide
+	echo which backends and security parameters to use and runs up to
+	echo PROCESS_COUNT key generation phases in parallel.
+	echo
+	echo '<base>' is a directory and defaults to /mount
+	echo '<process count>' is a number and defaults to 2
+	echo '<backend>' is one of clt or gghlite
+	echo '<secparam>' is a number
+	echo
+	echo The matrix branching program to use will be taken from:
+	echo '<base>/<backend>/<secparam>/public/template.json'
+	echo If a seed exists in the following location, it will be used:
+	echo '<base>/<backend>/<secparam>/private/seed.bin'
+}
+
+do_keygen() {
+	mkdir logs
+	keygen $backend_opt -s $secparam -n 10 >logs/keygen.out 2>logs/keygen.err &
+	add_pid $!
+}
+
+parse_args "$@"
+foreach_backend_secparam do_keygen
+wait_pids
+$succeeded

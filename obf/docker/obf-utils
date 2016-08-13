@@ -1,0 +1,67 @@
+#!/bin/bash
+
+base_dir=/mount
+
+parse_args() {
+	while [ $# -gt 0 ]
+	do
+		case "$1" in
+			--base)
+				base_dir="$2"
+				shift
+				shift
+				;;
+			--help)
+				usage
+				exit 0
+				;;
+			*)
+				echo Not sure what to do with argument $1
+				usage
+				exit 1
+				;;
+		esac
+	done
+}
+
+foreach_dirs() {
+	for backend in `ls "$base_dir"`
+	do
+		case "$backend" in
+			clt) backend_opt=CLT;;
+			gghlite) backend_opt=GGH;;
+			*)
+				echo WARNING: skipping unknown backend "$backend"
+				continue
+				;;
+		esac
+		for secparam in `ls "$base_dir/$backend"`
+		do
+			if ! [ "$secparam" -gt 0 ] 2>/dev/null
+			then
+				echo WARNING: skipping unlikely security parameter "$secparam"
+				continue
+			fi
+			for base in `ls "$base_dir/$backend/$secparam"`
+			do
+				if ! [ "$base" -gt 0 -a "$base" -lt 10 ] 2>/dev/null
+				then
+					echo WARNING: skipping unlikely alphabet size "$base"
+					continue
+				fi
+				for len in `ls "$base_dir/$backend/$secparam/$base"`
+				do
+					if ! [ "$len" -gt 0 ] 2>/dev/null
+					then
+						echo WARNING: skipping unlikely digit length "$len"
+						continue
+					fi
+					full_dir="$base_dir/$backend/$secparam/$base/$len"
+					pushd "$full_dir" >/dev/null
+					"$@"
+					popd >/dev/null
+				done
+			done
+		done
+	done
+}

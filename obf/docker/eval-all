@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -e
+source obf-utils
+
+usage() {
+	echo USAGE: eval-all [--base DIR] [--help]
+	echo Evaluate obfuscated point functions on random inputs. Uses the
+	echo directory structure in DIR to find functions to evaluate and choose
+	echo appropriate random inputs. Each subdirectory in
+	echo '<base>/<backend>/<secparam>/<digits>/<len>'
+	echo will be treated as an obfuscated function, where:
+	echo
+	echo '<base>' is a directory and defaults to /mount
+	echo '<backend>' is one of clt or gghlite
+	echo '<secparam>' is a number
+	echo '<digits>' is a number between 1 and 9 inclusive and tells what base
+	echo      was used to encode the secret point
+	echo '<len>' is a number and tells how long the secret point was
+}
+
+do_eval_all() {
+	for i in *
+	do
+		if ! [ -d "$i" ]
+		then
+			echo WARNING: Skipping non-directory "$i"
+			continue
+		fi
+
+		pt=`tr -dc 1-$base </dev/urandom | tr 1-$base 0-$base | head -c $len`
+		echo Evaluating "$i" on $pt in $backend/$secparam/$base/$len
+		obfuscator obf --mmap $backend_opt --base $base --load-obf "$i" --eval $pt
+	done
+}
+
+parse_args "$@"
+foreach_dirs do_eval_all

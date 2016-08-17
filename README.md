@@ -146,10 +146,12 @@ A submission will be accepted if it meets the following conditions:
 * We can successfully re-create the security break to validate the claim.
 * Consulting with the team that realized the submission is available to help if needed in re-creating the break.
 
-# How to Submit
----------------
+# How to Participate
+--------------------
 
-Please email _safeware.benchmark@galois.com_ with the required submission information.
+If you are interested in participating, please email _safeware.benchmark@galois.com_ to request the ciphertexts of interest to you, and we will prepare a USB key for you. (The entire collection of ciphertexts is 170GB, so Internet delivery would be prohibitive.)
+
+You may also email _safeware.benchmark@galois.com_ with the required submission information once you have developed a break.
 
 # Declaring Winners
 -------------------

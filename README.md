@@ -149,7 +149,7 @@ A submission will be accepted if it meets the following conditions:
 # How to Participate
 --------------------
 
-If you are interested in participating, please email _safeware.benchmark@galois.com_ to request the ciphertexts of interest to you, and we will prepare a USB key for you. (The entire collection of ciphertexts is 170GB, so Internet delivery would be prohibitive.)
+The ciphertexts are available on [Dropbox](https://www.dropbox.com/sh/of90kypq8j1nayo/AABwcjxsFOLYfx4adQkZ8GLna?dl=0). Alternatively, please email _safeware.benchmark@galois.com_ to request the ciphertexts of interest to you, and we will prepare a USB key for you.
 
 You may also email _safeware.benchmark@galois.com_ with the required submission information once you have developed a break.
 
